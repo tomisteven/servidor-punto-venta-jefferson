@@ -1,0 +1,492 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-10-18T23:33:51.612Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "req_7f355e8fc0f843f6bf0e62a63df355f9",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729294334011,
+      "created": 1729291724980,
+      "url": "{{ _.local }}/jugadores/club-categoria?club=670c79e12c29bd50e8558850&categoria=5",
+      "name": "Listar por Club y Categoria",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_27b169e75b534dbda1fdcbf30469a11b"
+        },
+        {
+          "id": "pair_3f46e36762b34d1b8f163c092b499386",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1729291724980,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "parentId": null,
+      "modified": 1728864615332,
+      "created": 1728864615332,
+      "name": "PADELMATCH",
+      "description": "",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "req_41cda69d930941489ca95288e2faa9bc",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729291463745,
+      "created": 1729290848129,
+      "url": "{{ _.local }}/jugadores?categoria=5",
+      "name": "Listar jugadores X Categoria",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_2ec098f4ed89457ea245f660112b7202"
+        },
+        {
+          "id": "pair_efaff5651265484181b80fa00d2fc2ad",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1729290848129,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_59915e7103654fdebe68d1e756f04d4b",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729273558935,
+      "created": 1729272387652,
+      "url": "{{ _.local }}/jugadores",
+      "name": "Listar Jugadores LIBRES",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_6dffb63c7ebd42419c8a5dadc6da570c"
+        },
+        {
+          "id": "pair_f14ca40d70a945eba8cbc22793cda1b2",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1729272387652,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_04289c69fbbd4165b40fea88ea922779",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729291443650,
+      "created": 1729272440738,
+      "url": "{{ _.local }}/jugadores?club=67127cdd5aaf675ab833f6ca",
+      "name": "Listar Jugadores POR CLUB",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_36266a10e4f04787aa2ae8123e689a4d"
+        },
+        {
+          "id": "pair_045f731661ca480993fe966cb8f341ba",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1729268693722.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_ef9dd130851c49f5a6a4de6dc2f2b4a3",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729268325093,
+      "created": 1729264999793,
+      "url": "{{ _.local }}/afiliar-jugador/",
+      "name": "Afiliar Jugador a Clubes",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"club_id\" : \"67127cdd5aaf675ab833f6ca\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_211a7a02da4d44a6938c682c3a2b20fd"
+        },
+        {
+          "id": "pair_47dde2b11096431184347738cf9aa52c",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1729264999793,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_752d116dc9ac4f81aa6ec9ae7390bb2b",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729265988219,
+      "created": 1728871433762,
+      "url": "{{ _.local }}/club/actualizar",
+      "name": "Actualizar Club",
+      "description": "",
+      "method": "PATCH",
+      "body": { "mimeType": "application/json", "text": "{\n\n}" },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_7c6bd26e1efb4447b1e3432b12b01874"
+        },
+        {
+          "id": "pair_62a3924104fb411e81c1cf97959cb074",
+          "name": "Authorization",
+          "value": "{{ _.token_club }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728871433762,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_7ba4e48bcd2d4a5d82cbefe4ecc411ad",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729275301458,
+      "created": 1729273810730,
+      "url": "{{ _.local }}/jugador/actualizar",
+      "name": "Actualizar Jugador",
+      "description": "",
+      "method": "PATCH",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\"categoria\": \"5\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "pair_271943eca42b4271bac5218df0b52c50"
+        },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_7c6bd26e1efb4447b1e3432b12b01874"
+        },
+        {
+          "id": "pair_62a3924104fb411e81c1cf97959cb074",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728871186775,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_cb52e7563c4a4633aef5f44d3e60b4cf",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1728870992610,
+      "created": 1728870939788,
+      "url": "{{ _.local }}/auth/login/club",
+      "name": "Login Club",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"email\" : \"padelpro@gmail.com\",\n\t\"password\" :\"padelpro\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728870939788,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_db0e4e95d25d49bba384a9e71100c834",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729268253708,
+      "created": 1728869849549,
+      "url": "{{ _.local }}/auth/register/club",
+      "name": "Registrar CLUB",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"nombreClub\" : \"Club Wilson\",\n\t\"email\" :\"padelwilson@gmail.com\",\n\t\"password\":\"padelwilson\",\n\t\"repeatPassword\" : \"padelwilson\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_56f357abab0d4ae4b236ceb5fd5be137"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728869849549,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_a21c21bc1a9b42558624c9e642640f3f",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1728871150233,
+      "created": 1728869305269,
+      "url": "{{ _.local }}/club",
+      "name": "Listar Clubes",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_de2b335ef28a4ae0882ed62704392923"
+        },
+        {
+          "id": "pair_57dc1efd50b3421dbdc4951be4000211",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728869305269,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_09479136f35943098219eac14118f0b6",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729281393756,
+      "created": 1728868861989,
+      "url": "{{ _.local }}",
+      "name": "Jugador Loggeado",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "User-Agent",
+          "value": "insomnia/2023.5.8",
+          "id": "pair_7367a71a67b0413b88081a4c96c9b0d0"
+        },
+        {
+          "id": "pair_bd881f0e3d014bb29d2cd29dcdafb8bc",
+          "name": "Authorization",
+          "value": "{{ _.token }}",
+          "description": ""
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728868861989,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_54c57997d78b400caf95c84249282ca5",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1728865219746,
+      "created": 1728865166202,
+      "url": "{{ _.local }}/auth/login",
+      "name": "Login Jugador",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"email\" : \"jugador1@hotmail.com\",\n\t\"password\" : \"jugador1\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728865166202,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_0cb2f6a1577f433aba4625f30ba07bbf",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1729290818517,
+      "created": 1728864618317,
+      "url": "{{ _.local }}/auth/register",
+      "name": "Registrar Jugador",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "\n{\"email\" : \"jugador3@hotmail.com\",\n\"password\" : \"jugador3\",\n \"repeatPassword\" :\"jugador3\"\n }"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/2023.5.8" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1728864618317,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "env_ffedfbedd24b6b4472939ae11d32af7a89f89793",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1728871493112,
+      "created": 1728864615335,
+      "name": "Base Environment",
+      "data": {
+        "local": "http://localhost:8080",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwidXNlcl9pZCI6IjY3MGM2MzBiZjczOTlhMTg2NGQ3ZjVmZSIsImlhdCI6MTcyODg2NTI2NTg2MiwiZXhwIjoxNzMxNTY1MjY1ODYxfQ.yb1tTCQGdd8lsPcagC8nIYQL-35MuK_jyTDSV9WUxf0",
+        "token_club": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwidXNlcl9pZCI6IjY3MGM2MzBiZjczOTlhMTg2NGQ3ZjVmZSIsImlhdCI6MTcyODg2NTI2NTg2MiwiZXhwIjoxNzMxNTY1MjY1ODYxfQ.yb1tTCQGdd8lsPcagC8nIYQL-35MuK_jyTDSV9WUxf0"
+      },
+      "dataPropertyOrder": { "&": ["local", "token", "token_club"] },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1728864615335,
+      "_type": "environment"
+    },
+    {
+      "_id": "jar_ffedfbedd24b6b4472939ae11d32af7a89f89793",
+      "parentId": "wrk_d5de84960fac4b88951ffc92997356bd",
+      "modified": 1728864615336,
+      "created": 1728864615336,
+      "name": "Default Jar",
+      "cookies": [],
+      "_type": "cookie_jar"
+    }
+  ]
+}
