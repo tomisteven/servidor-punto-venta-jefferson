@@ -8,6 +8,7 @@ const {
   getComprasPorDiaController,
   getComprasPorServicioController,
   getCompraController,
+  getComprasPorFechaController,
 } = require("../controllers/GET/compras.controller.js");
 
 const {
@@ -17,6 +18,7 @@ const {
 router.get("/", asureAuth, getComprasController);
 
 router.get("/day", asureAuth, getComprasPorDiaController);
+router.get("/day/:fecha", asureAuth, getComprasPorFechaController);
 
 router.get("/servicio/:servicio", asureAuth, getComprasPorServicioController);
 

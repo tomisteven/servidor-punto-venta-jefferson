@@ -3,6 +3,7 @@ const { asureAuth } = require("../middlewares/authenticated");
 const {
   getCuentasController,
   cuentasEnStockController,
+  cuentasEnStockConServicioController
 } = require("../controllers/GET/cuenta.controller");
 const {
   crearCuentaController,
@@ -19,6 +20,7 @@ const {
 const router = Router();
 
 router.get("/", asureAuth, getCuentasController);
+router.get("/stock/:servicio", asureAuth, cuentasEnStockConServicioController);
 router.get("/stock", asureAuth, cuentasEnStockController);
 
 router.post("/nueva", asureAuth, crearCuentaController);

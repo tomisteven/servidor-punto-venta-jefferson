@@ -59,7 +59,9 @@ const getComprasPorDiaController = async (req, res) => {
           localField: "compras.cliente",
           foreignField: "_id",
           pipeline: [
-            { $project: { _id: 0, nombreCompleto: 1 } }, // Solo selecciona el nombre
+            { $project: { _id: 0, nombreCompleto: 1,
+
+             } }, // Solo selecciona el nombre
           ],
           as: "compras.cliente",
         },
@@ -160,6 +162,141 @@ const getComprasPorDiaController = async (req, res) => {
   }
 };
 
+const getComprasPorFechaController = async (req, res) => {
+  try {
+    const { fecha } = req.params; // Obtén la fecha de los parámetros de la ruta
+    const startDate = new Date(fecha); // Convierte la fecha a un objeto Date
+    const endDate = new Date(startDate); // Crea un nuevo objeto Date
+    endDate.setDate(startDate.getDate() + 1); // Suma un día a la fecha para el rango
+
+    const compras = await Compra.aggregate([
+      {
+        // Filtra las compras por fecha
+        $match: {
+          fecha: {
+            $gte: startDate,
+            $lt: endDate,
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "clientes",
+          localField: "cliente",
+          foreignField: "_id",
+          pipeline: [
+            { $project: { _id: 0, nombreCompleto: 1 } },
+          ],
+          as: "cliente",
+        },
+      },
+      {
+        $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: "servicios",
+          localField: "servicio",
+          foreignField: "_id",
+          pipeline: [
+            { $project: { _id: 0, nombre: 1 } },
+          ],
+          as: "servicio",
+        },
+      },
+      {
+        $unwind: {
+          path: "$servicio",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "bancos",
+          localField: "banco",
+          foreignField: "_id",
+          pipeline: [
+            { $project: { _id: 0, nombre: 1 } },
+          ],
+          as: "banco",
+        },
+      },
+      {
+        $unwind: { path: "$banco", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $lookup: {
+          from: "cuentas",
+          localField: "cuenta",
+          foreignField: "_id",
+          pipeline: [
+            { $project: { _id: 0, nombre: 1 } },
+          ],
+          as: "cuenta",
+        },
+      },
+      {
+        $unwind: { path: "$cuenta", preserveNullAndEmptyArrays: true },
+      },
+      {
+        $project: {
+          _id: 1,
+          precio: 1,
+          fecha: 1,
+          "cliente.nombreCompleto": 1,
+          "servicio.nombre": 1,
+          "banco.nombre": 1,
+          "cuenta.nombre": 1,
+        },
+      },
+      {
+        $sort: { fecha: 1 }, // Ordena por fecha
+      },
+    ]);
+
+    if (compras.length === 0) {
+      return res.status(404).json({
+        message: "No se encontraron compras para la fecha especificada.",
+        ok: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Compras encontradas para la fecha especificada.",
+      compras,
+      ok: true,
+    });
+  } catch (error) {
+    console.error("Error en getComprasPorFechaController:", error);
+
+    return res.status(500).json({
+      message: "Error al obtener las compras por fecha. Intente nuevamente más tarde.",
+      ok: false,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const getComprasPorServicioController = async (req, res) => {
   const { servicio } = req.params;
 
@@ -252,4 +389,5 @@ module.exports = {
   getComprasPorDiaController,
   getComprasPorServicioController,
   getCompraController,
+  getComprasPorFechaController,
 };
