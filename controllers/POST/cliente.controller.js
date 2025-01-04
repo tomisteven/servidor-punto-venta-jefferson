@@ -176,6 +176,8 @@ const crearNuevaVentaController = async (req, res) => {
   }
 };
 
+
+//verificar tema de peticiones recurrentes con el session
 const crearNuevaVentaConComboController = async (req, res) => {
   const { id_cliente, servicio, banco, generarVenta, precioManual } = req.body;
   const session = await mongoose.startSession();
