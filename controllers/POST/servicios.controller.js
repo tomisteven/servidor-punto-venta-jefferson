@@ -1,7 +1,7 @@
 const Servicio = require("../../models/Servicio");
 
 const crearNuevoServicioController = async (req, res) => {
-  const { nombre, precio, nCuentas } = req.body;
+  const { nombre, precio, nCuentas, combo, servicioCombo } = req.body;
 
   try {
     const serviciosExistentes = await Servicio.find({ nombre });
@@ -25,6 +25,8 @@ const crearNuevoServicioController = async (req, res) => {
       nombre,
       precio,
       nCuentas,
+      combo,
+      servicioCombo,
     });
 
     // Guardar el servicio

@@ -5,6 +5,16 @@ const ServicioSchema = new Schema({
   nombre: String,
   precio: Number,
   nCuentas: Number,
+  combo: {
+    type: Boolean,
+    default: false,
+  },
+  servicioCombo: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Servicio",
+    },
+  ],
   fechaCreacion: {
     type: Date,
     default: Date.now,

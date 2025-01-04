@@ -11,9 +11,13 @@ const {
 const {
   crearNuevoClienteController,
   crearNuevaVentaController,
+  crearNuevaVentaConComboController,
+  crearClientesMasivos,
 } = require("../controllers/POST/cliente.controller.js");
 
-const {eliminarClienteController} = require("../controllers/DELETE/cliente.controller.js");
+const {
+  eliminarClienteController,
+} = require("../controllers/DELETE/cliente.controller.js");
 
 router.get("/", asureAuth, getClientes);
 router.get("/:id", asureAuth, getClientes);
@@ -21,15 +25,11 @@ router.get("/ventas/:id", asureAuth, getVentasClienteController);
 //router.get("/ver/compras/:id", asureAuth, verComprasClienteController);
 
 router.post("/nuevo", asureAuth, crearNuevoClienteController);
+router.post("/nuevo/masivo", asureAuth, crearClientesMasivos);
 router.post("/crear/venta", asureAuth, crearNuevaVentaController);
-
+router.post("/crear/combo/venta", asureAuth, crearNuevaVentaConComboController);
 
 router.delete("/:id", asureAuth, eliminarClienteController);
 //router.patch("/:id", asureAuth, actualizarClienteController);
-
-
-
-
-
 
 module.exports = router;

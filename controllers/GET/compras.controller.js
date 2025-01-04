@@ -1,4 +1,5 @@
 const Compra = require("../../models/Compra");
+const CompraCombo = require("../../models/CompraCombo");
 
 const getComprasController = async (req, res) => {
   try {
@@ -37,11 +38,64 @@ const getComprasController = async (req, res) => {
   }
 };
 
+const getCompraComboController = async (req, res) => {
+  const { id } = req.params;
+  const compras = await CompraCombo.findById(id)
+    .populate({
+      path: "cliente",
+      select: "nombreCompleto -_id",
+    })
+    .populate({
+      path: "servicio",
+      select: "nombre -_id",
+    })
+    .populate({
+      path: "cuentas", // Poblamos el arreglo de cuentas
+      model: "Cuenta", // Especificamos que los IDs en el arreglo son del modelo "Cuenta"
+      select: "email clave _id", // Solo obtenemos el campo "nombre"
+    })
+    .populate({
+      path: "banco",
+      select: "nombre -_id",
+    })
+    .lean();
+
+  if (!compras) {
+    return res.status(404).json({
+      message: "Compra no encontrada.",
+      ok: false,
+    });
+  }
+
+  return res.status(200).json({
+    message: "Compra encontrada.",
+    compras,
+    ok: true,
+  });
+};
+
 const getComprasPorDiaController = async (req, res) => {
   try {
-    // Optimización: Selección precisa de campos en el pipeline
     const compras = await Compra.aggregate([
-      // Agrupa las compras por día
+      // Unir las compras de ambas colecciones
+      {
+        $unionWith: {
+          coll: "compracombos", // Nombre de la colección CompraCombo
+          pipeline: [
+            {
+              $addFields: {
+                tipo: "combo", // Etiqueta para identificar compras de combos
+              },
+            },
+          ],
+        },
+      },
+      {
+        $addFields: {
+          tipo: { $ifNull: ["$tipo", "simple"] }, // Etiqueta para identificar compras normales
+        },
+      },
+      // Agrupar por fecha
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$fecha" } },
@@ -59,9 +113,7 @@ const getComprasPorDiaController = async (req, res) => {
           localField: "compras.cliente",
           foreignField: "_id",
           pipeline: [
-            { $project: { _id: 0, nombreCompleto: 1,
-
-             } }, // Solo selecciona el nombre
+            { $project: { _id: 0, nombreCompleto: 1 } }, // Solo selecciona el nombre
           ],
           as: "compras.cliente",
         },
@@ -102,22 +154,17 @@ const getComprasPorDiaController = async (req, res) => {
       {
         $unwind: { path: "$compras.banco", preserveNullAndEmptyArrays: true }, // Manejo de datos nulos
       },
-      // Lookup para cuenta con proyección
+      // Lookup para cuentas en combos
       {
         $lookup: {
           from: "cuentas",
-          localField: "compras.cuenta",
+          localField: "compras.cuentas",
           foreignField: "_id",
-          pipeline: [
-            { $project: { _id: 0, nombre: 1 } }, // Solo selecciona el nombre
-          ],
-          as: "compras.cuenta",
+          pipeline: [{ $project: { _id: 1 } }],
+          as: "compras.cuentas",
         },
       },
-      {
-        $unwind: { path: "$compras.cuenta", preserveNullAndEmptyArrays: true }, // Manejo de datos nulos
-      },
-      // Proyección final: Reduce el tamaño de los datos
+      // Proyección final
       {
         $project: {
           _id: 1,
@@ -128,7 +175,8 @@ const getComprasPorDiaController = async (req, res) => {
           "compras.cliente": "$compras.cliente.nombreCompleto",
           "compras.servicio": "$compras.servicio.nombre",
           "compras.banco": "$compras.banco.nombre",
-          "compras.cuenta": "$compras.cuenta.nombre",
+          "compras.cuentas": "$compras.cuentas._id",
+          "compras.tipo": 1, // Indica si es compra simple o combo
         },
       },
       // Reagrupación para estructurar los datos
@@ -153,7 +201,6 @@ const getComprasPorDiaController = async (req, res) => {
   } catch (error) {
     console.error("Error en getComprasPorDiaController:", error);
 
-    // Manejo detallado de errores
     return res.status(500).json({
       message:
         "Error al obtener las compras por día. Intente nuevamente más tarde.",
@@ -184,9 +231,7 @@ const getComprasPorFechaController = async (req, res) => {
           from: "clientes",
           localField: "cliente",
           foreignField: "_id",
-          pipeline: [
-            { $project: { _id: 0, nombreCompleto: 1 } },
-          ],
+          pipeline: [{ $project: { _id: 0, nombreCompleto: 1 } }],
           as: "cliente",
         },
       },
@@ -198,9 +243,7 @@ const getComprasPorFechaController = async (req, res) => {
           from: "servicios",
           localField: "servicio",
           foreignField: "_id",
-          pipeline: [
-            { $project: { _id: 0, nombre: 1 } },
-          ],
+          pipeline: [{ $project: { _id: 0, nombre: 1 } }],
           as: "servicio",
         },
       },
@@ -215,9 +258,7 @@ const getComprasPorFechaController = async (req, res) => {
           from: "bancos",
           localField: "banco",
           foreignField: "_id",
-          pipeline: [
-            { $project: { _id: 0, nombre: 1 } },
-          ],
+          pipeline: [{ $project: { _id: 0, nombre: 1 } }],
           as: "banco",
         },
       },
@@ -229,9 +270,7 @@ const getComprasPorFechaController = async (req, res) => {
           from: "cuentas",
           localField: "cuenta",
           foreignField: "_id",
-          pipeline: [
-            { $project: { _id: 0, nombre: 1 } },
-          ],
+          pipeline: [{ $project: { _id: 0, nombre: 1 } }],
           as: "cuenta",
         },
       },
@@ -270,32 +309,12 @@ const getComprasPorFechaController = async (req, res) => {
     console.error("Error en getComprasPorFechaController:", error);
 
     return res.status(500).json({
-      message: "Error al obtener las compras por fecha. Intente nuevamente más tarde.",
+      message:
+        "Error al obtener las compras por fecha. Intente nuevamente más tarde.",
       ok: false,
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const getComprasPorServicioController = async (req, res) => {
   const { servicio } = req.params;
@@ -363,6 +382,8 @@ const getCompraController = async (req, res) => {
       })
       .lean();
 
+    console.log(compras);
+
     if (!compras) {
       return res.status(404).json({
         message: "Compra no encontrada.",
@@ -390,4 +411,5 @@ module.exports = {
   getComprasPorServicioController,
   getCompraController,
   getComprasPorFechaController,
+  getCompraComboController,
 };

@@ -9,6 +9,7 @@ const {
   getComprasPorServicioController,
   getCompraController,
   getComprasPorFechaController,
+  getCompraComboController
 } = require("../controllers/GET/compras.controller.js");
 
 const {
@@ -16,6 +17,7 @@ const {
 } = require("../controllers/DELETE/compra.controller.js");
 
 router.get("/", asureAuth, getComprasController);
+router.get("/combo/:id", asureAuth, getCompraComboController);
 
 router.get("/day", asureAuth, getComprasPorDiaController);
 router.get("/day/:fecha", asureAuth, getComprasPorFechaController);

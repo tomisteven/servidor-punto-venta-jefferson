@@ -14,6 +14,10 @@ const CuentaSchema = new Schema({
     default: Date.now,
   },
   servicio: String,
+  servicioID: {
+    type: Schema.Types.ObjectId,
+    ref: "Servicio",
+  },
   precio: Number,
 });
 
