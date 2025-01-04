@@ -24,9 +24,30 @@ const getComprasController = async (req, res) => {
       .sort({ _id: -1 })
       .limit(50);
 
+    const comprasCombo = await CompraCombo.find()
+      .populate({
+        path: "cliente",
+        select: "nombreCompleto -_id",
+      })
+      .populate({
+        path: "servicio",
+        select: "nombre -_id",
+      })
+
+      .populate({
+        path: "cuentas", // Poblamos el arreglo de cuentas
+        model: "Cuenta", // Especificamos que los IDs en el arreglo son del modelo "Cuenta"
+        select: "email clave _id", // Solo obtenemos el campo "nombre"
+      })
+
+      .populate({
+        path: "banco",
+        select: "nombre -_id",
+      });
+
     return res.status(200).json({
       message: "Compras encontradas.",
-      compras,
+      compras: [...compras, ...comprasCombo].sort((a, b) => b._id - a._id),
       ok: true,
     });
   } catch (error) {

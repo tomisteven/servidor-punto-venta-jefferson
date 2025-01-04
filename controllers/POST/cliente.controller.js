@@ -65,10 +65,10 @@ const crearNuevaVentaController = async (req, res) => {
     }
 
     // Buscar cliente y banco
-    const cliente = await Cliente.findById(id_cliente).session(session);
-    const bancoSeleccionado = await Banco.findOne({ nombre: banco }).session(
-      session
-    );
+    const [cliente, bancoSeleccionado] = await Promise.all([
+      Cliente.findById(id_cliente).session(session),
+      Banco.findOne({ nombre: banco }).session(session),
+    ]);
 
     if (!cliente) {
       return res
@@ -177,13 +177,22 @@ const crearNuevaVentaController = async (req, res) => {
 };
 
 const crearNuevaVentaConComboController = async (req, res) => {
+  const { id_cliente, servicio, banco, generarVenta, precioManual } = req.body;
   const session = await mongoose.startSession();
-  session.startTransaction();
+
+  const enProceso = new Set();
+
+  if (enProceso.has(id_cliente)) {
+    return res.status(429).json({
+      message: "Otra operación está en curso para este cliente.",
+      ok: false,
+    });
+  }
+
+  enProceso.add(id_cliente);
 
   try {
-    const { id_cliente, servicio, banco, generarVenta, precioManual } =
-      req.body;
-
+    session.startTransaction();
     // Validación inicial
     if (!id_cliente || !servicio || !banco) {
       return res.status(400).json({
@@ -192,14 +201,12 @@ const crearNuevaVentaConComboController = async (req, res) => {
       });
     }
 
-    // Buscar cliente, banco y servicio
-    const cliente = await Cliente.findById(id_cliente).session(session);
-    const bancoSeleccionado = await Banco.findOne({ nombre: banco }).session(
-      session
-    );
-    const servicioPrincipal = await Servicio.findById(servicio).session(
-      session
-    );
+    // Buscar cliente y banco
+    const [cliente, bancoSeleccionado, servicioPrincipal] = await Promise.all([
+      Cliente.findById(id_cliente).session(session),
+      Banco.findOne({ nombre: banco }).session(session),
+      Servicio.findById(servicio).session(session),
+    ]);
 
     if (!cliente) {
       return res
