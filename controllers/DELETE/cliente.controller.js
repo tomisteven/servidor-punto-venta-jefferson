@@ -1,6 +1,22 @@
 const Cliente = require("../../models/Cliente");
 const mongoose = require("mongoose");
 
+const deleteAllClientes = async (req, res) => {
+  try {
+    await Cliente.deleteMany();
+    return res.status(200).json({
+      message: "Todos los clientes han sido eliminados.",
+      ok: true,
+    });
+  } catch (error) {
+    console.error("Error en deleteAllClientes:", error);
+    return res.status(500).json({
+      message: "Error al eliminar todos los clientes.",
+      ok: false,
+    });
+  }
+};
+
 const eliminarClienteController = async (req, res) => {
   const { id } = req.params;
 
@@ -49,4 +65,4 @@ const eliminarClienteController = async (req, res) => {
   }
 };
 
-module.exports = { eliminarClienteController };
+module.exports = { eliminarClienteController, deleteAllClientes };

@@ -8,20 +8,16 @@ const ClienteSchema = new Schema({
     default: Date.now,
   },
   telefono: String,
-  comprasRealizadas: [
+  comprasIndividualesRealizadas: [
     {
-      servicio: {
-        type: Schema.Types.ObjectId,
-        ref: "Servicio",
-      },
-      cuenta: {
-        type: Schema.Types.ObjectId,
-        ref: "Cuenta",
-      },
-      banco: {
-        type: Schema.Types.ObjectId,
-        ref: "Banco",
-      },
+      type: Schema.Types.ObjectId,
+      ref: "Compra",
+    },
+  ],
+  comprasCombosRealizadas: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "CompraCombo",
     },
   ],
   totalGastado: {

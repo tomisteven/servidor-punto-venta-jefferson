@@ -69,41 +69,73 @@ const getVentasClienteController = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Obtener las compras del cliente utilizando el servicio
-    const cliente = await verComprasClienteService(id);
+    // Buscar al cliente por ID
+    const cliente = await Cliente.findById(id)
+      .populate({
+        path: "comprasIndividualesRealizadas",
+        populate: [
+          { path: "servicio", select: "nombre -_id" },
+          { path: "cuenta", select: "email clave -_id" },
+        ],
+      })
+      .populate({
+        path: "comprasCombosRealizadas",
+        populate: [
+          { path: "servicio", select: "nombre -_id" },
+          { path: "cuentas", model: "Cuenta", select: "email clave -_id" },
+        ],
+      })
+      .lean();
 
     if (!cliente) {
-      return res.status(404).json({ message: "Cliente no encontrado" });
+      return res.status(404).json({
+        message: "Cliente no encontrado.",
+        ok: false,
+      });
     }
 
-    // Acceder a las compras realizadas por el cliente
-    const comprasCliente = cliente.comprasRealizadas;
-
-    // Transformar las compras con la información de servicios, banco y cuenta
-    const comprasEnriquecidas = await Promise.all(
-      comprasCliente.map(async (compra) => {
-        const servicio = await Servicio.findById(compra.servicio).select(
-          "nombre descripcion -_id"
-        );
-        const banco = await Banco.findById(compra.banco).select("nombre -_id");
-        const cuenta = await Cuenta.findById(compra.cuenta).select(
-          "email clave -_id"
-        );
-
-        return {
-          ...compra,
-          servicio,
-          banco,
-          cuenta,
-        };
+    // Formatear compras individuales
+    const comprasIndividuales = cliente.comprasIndividualesRealizadas.map(
+      (compra) => ({
+        _id: compra._id,
+        servicio: compra.servicio?.nombre || "Servicio desconocido",
+        cuentas: compra.cuenta
+          ? [{ email: compra.cuenta.email, clave: compra.cuenta.clave }]
+          : [],
       })
     );
 
-    res.status(200).json(comprasEnriquecidas);
+    // Formatear compras combo
+    const comprasCombos = cliente.comprasCombosRealizadas.map((compraCombo) => ({
+      _id: compraCombo._id,
+      servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+      cuentas: compraCombo.cuentas.map((cuenta) => ({
+        email: cuenta.email,
+        clave: cuenta.clave,
+      })),
+    }));
+
+    return res.status(200).json({
+      message: "Compras del cliente obtenidas exitosamente.",
+      cliente: {
+        nombreCompleto: cliente.nombreCompleto,
+        totalGastado: cliente.totalGastado,
+        telefono: cliente.telefono,
+      },
+      compras: {
+        individuales: comprasIndividuales,
+        combos: comprasCombos,
+      },
+      ok: true,
+    });
   } catch (error) {
-    console.error("Error en getVentasClienteController:", error);
-    res.status(500).json({ message: "Error en el servidor", error });
+    console.error("Error en getComprasClienteController:", error);
+    return res.status(500).json({
+      message: "Error en el servidor. No se pudieron obtener las compras del cliente.",
+      ok: false,
+    });
   }
 };
+
 
 module.exports = { getClientes, getVentasClienteController };

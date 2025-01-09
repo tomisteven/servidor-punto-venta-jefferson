@@ -1,5 +1,9 @@
 const Compra = require("../../models/Compra");
 const CompraCombo = require("../../models/CompraCombo");
+const getBancoID = require("../../services/GET/getBancoID");
+const getClienteID = require("../../services/GET/getClienteID");
+const getCuentaID = require("../../services/GET/getCuentaID");
+const getServicioID = require("../../services/GET/getServicioID");
 
 const getComprasController = async (req, res) => {
   try {
@@ -33,21 +37,53 @@ const getComprasController = async (req, res) => {
         path: "servicio",
         select: "nombre -_id",
       })
-
       .populate({
         path: "cuentas", // Poblamos el arreglo de cuentas
-        model: "Cuenta", // Especificamos que los IDs en el arreglo son del modelo "Cuenta"
-        select: "email clave _id", // Solo obtenemos el campo "nombre"
+        model: "Cuenta",
+        select: "email clave -_id",
       })
-
       .populate({
         path: "banco",
         select: "nombre -_id",
-      });
+      })
+      .lean();
+
+    // Formatear resultados de "Compra"
+    const comprasFormateadas = compras.map((compra) => ({
+      _id: compra._id,
+      precio: compra.precio,
+      fecha: compra.fecha,
+      cliente: compra.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compra.cuenta
+        ? [{ email: compra.cuenta.email, clave: compra.cuenta.clave }]
+        : [],
+      banco: compra.banco?.nombre || "Banco desconocido",
+      servicio: compra.servicio?.nombre || "Servicio desconocido",
+    }));
+
+    // Formatear resultados de "CompraCombo"
+    const comprasComboFormateadas = comprasCombo.map((compraCombo) => ({
+      _id: compraCombo._id,
+      precio: compraCombo.precio,
+      fecha: compraCombo.fecha,
+      cliente: compraCombo.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compraCombo.cuentas.map((cuenta) => ({
+        email: cuenta.email,
+        clave: cuenta.clave,
+      })),
+      banco: compraCombo.banco?.nombre || "Banco desconocido",
+      servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+    }));
+
+    // Fusionar y ordenar los resultados
+    const comprasTotales = [
+      ...comprasFormateadas,
+      ...comprasComboFormateadas,
+    ].sort((a, b) => b._id - a._id);
 
     return res.status(200).json({
       message: "Compras encontradas.",
-      compras: [...compras, ...comprasCombo].sort((a, b) => b._id - a._id),
+      compras: comprasTotales,
       ok: true,
     });
   } catch (error) {
@@ -232,98 +268,76 @@ const getComprasPorDiaController = async (req, res) => {
 
 const getComprasPorFechaController = async (req, res) => {
   try {
-    const { fecha } = req.params; // Obtén la fecha de los parámetros de la ruta
-    const startDate = new Date(fecha); // Convierte la fecha a un objeto Date
-    const endDate = new Date(startDate); // Crea un nuevo objeto Date
-    endDate.setDate(startDate.getDate() + 1); // Suma un día a la fecha para el rango
+    const { fecha } = req.params;
+    const startDate = new Date(fecha);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 1);
 
-    const compras = await Compra.aggregate([
-      {
-        // Filtra las compras por fecha
-        $match: {
-          fecha: {
-            $gte: startDate,
-            $lt: endDate,
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "clientes",
-          localField: "cliente",
-          foreignField: "_id",
-          pipeline: [{ $project: { _id: 0, nombreCompleto: 1 } }],
-          as: "cliente",
-        },
-      },
-      {
-        $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true },
-      },
-      {
-        $lookup: {
-          from: "servicios",
-          localField: "servicio",
-          foreignField: "_id",
-          pipeline: [{ $project: { _id: 0, nombre: 1 } }],
-          as: "servicio",
-        },
-      },
-      {
-        $unwind: {
-          path: "$servicio",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "bancos",
-          localField: "banco",
-          foreignField: "_id",
-          pipeline: [{ $project: { _id: 0, nombre: 1 } }],
-          as: "banco",
-        },
-      },
-      {
-        $unwind: { path: "$banco", preserveNullAndEmptyArrays: true },
-      },
-      {
-        $lookup: {
-          from: "cuentas",
-          localField: "cuenta",
-          foreignField: "_id",
-          pipeline: [{ $project: { _id: 0, nombre: 1 } }],
-          as: "cuenta",
-        },
-      },
-      {
-        $unwind: { path: "$cuenta", preserveNullAndEmptyArrays: true },
-      },
-      {
-        $project: {
-          _id: 1,
-          precio: 1,
-          fecha: 1,
-          "cliente.nombreCompleto": 1,
-          "servicio.nombre": 1,
-          "banco.nombre": 1,
-          "cuenta.nombre": 1,
-        },
-      },
-      {
-        $sort: { fecha: 1 }, // Ordena por fecha
-      },
+    // Consultar Compras y ComprasCombo en paralelo con populate
+    const [compras, comprasCombo] = await Promise.all([
+      Compra.find({
+        fecha: { $gte: startDate, $lt: endDate },
+      })
+        .populate("cliente", "nombreCompleto")
+        .populate("cuenta", "email clave")
+        .populate("banco", "nombre")
+        .populate("servicio", "nombre")
+        .lean(),
+      CompraCombo.find({
+        fecha: { $gte: startDate, $lt: endDate },
+      })
+        .populate("cliente", "nombreCompleto")
+        .populate("cuentas", "email clave")
+        .populate("banco", "nombre")
+        .populate("servicio", "nombre")
+        .lean(),
     ]);
 
-    if (compras.length === 0) {
+    if (compras.length === 0 && comprasCombo.length === 0) {
       return res.status(404).json({
         message: "No se encontraron compras para la fecha especificada.",
         ok: false,
       });
     }
 
+    // Formatear los datos de Compras
+    const compraArray = compras.map((compra) => ({
+      _id: compra._id,
+      precio: compra.precio,
+      fecha: compra.fecha,
+      cliente: compra.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: [
+        {
+          email: compra.cuenta?.email || "N/A",
+          clave: compra.cuenta?.clave || "N/A",
+        },
+      ],
+      banco: compra.banco?.nombre || "Banco desconocido",
+      servicio: compra.servicio?.nombre || "Servicio desconocido",
+      tipo: "Compra", // Indicar el tipo de compra
+    }));
+
+    // Formatear los datos de ComprasCombo
+    const compraComboArray = comprasCombo.map((compraCombo) => ({
+      _id: compraCombo._id,
+      precio: compraCombo.precio,
+      fecha: compraCombo.fecha,
+      cliente: compraCombo.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compraCombo.cuentas.map((cuenta) => ({
+        email: cuenta.email || "N/A",
+        clave: cuenta.clave || "N/A",
+      })),
+      banco: compraCombo.banco?.nombre || "Banco desconocido",
+      servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+      tipo: "CompraCombo", // Indicar el tipo de compra
+    }));
+
+    // Fusionar ambas listas
+    const comprasTotales = [...compraArray, ...compraComboArray];
+
     return res.status(200).json({
       message: "Compras encontradas para la fecha especificada.",
-      compras,
+      compras: comprasTotales,
       ok: true,
     });
   } catch (error) {
@@ -338,53 +352,12 @@ const getComprasPorFechaController = async (req, res) => {
 };
 
 const getComprasPorServicioController = async (req, res) => {
-  const { servicio } = req.params;
-
-  const servicioBuscado = servicio.toLowerCase(); // Convertir a minúsculas
-  const compras = await Compra.find()
-    .populate({
-      path: "cliente",
-      select: "nombreCompleto -_id",
-    })
-    .populate({
-      path: "servicio",
-      select: "nombre -_id",
-    })
-    .populate({
-      path: "cuenta",
-      select: "email clave -_id",
-    })
-    .populate({
-      path: "banco",
-      select: "nombre -_id",
-    })
-    .lean()
-    .sort({ _id: -1 })
-    .limit(50);
-
-  if (!compras) {
-    return res.status(404).json({
-      message: "No se encontraron compras.",
-      ok: false,
-    });
-  }
-
-  const comprasFiltradas = compras.filter(
-    (compra) => compra.servicio.nombre.toLowerCase() === servicioBuscado
-  );
-
-  return res.status(200).json({
-    message: "Compras encontradas.",
-    compras: comprasFiltradas,
-    ok: true,
-  });
-};
-
-const getCompraController = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const compras = await Compra.findById(id)
+    const { servicio } = req.params;
+    const servicioBuscado = servicio.toLowerCase(); // Convertir a minúsculas para el filtro
+
+    // Obtener las compras del modelo Compra
+    const compras = await Compra.find()
       .populate({
         path: "cliente",
         select: "nombreCompleto -_id",
@@ -403,18 +376,171 @@ const getCompraController = async (req, res) => {
       })
       .lean();
 
-    console.log(compras);
+    // Obtener las compras del modelo CompraCombo
+    const comprasCombo = await CompraCombo.find()
+      .populate({
+        path: "cliente",
+        select: "nombreCompleto -_id",
+      })
+      .populate({
+        path: "servicio",
+        select: "nombre -_id",
+      })
+      .populate({
+        path: "cuentas",
+        model: "Cuenta",
+        select: "email clave -_id",
+      })
+      .populate({
+        path: "banco",
+        select: "nombre -_id",
+      })
+      .lean();
 
-    if (!compras) {
+    // Formatear resultados de Compra
+    const comprasFormateadas = compras.map((compra) => ({
+      _id: compra._id,
+      precio: compra.precio,
+      fecha: compra.fecha,
+      cliente: compra.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compra.cuenta
+        ? [{ email: compra.cuenta.email, clave: compra.cuenta.clave }]
+        : [],
+      banco: compra.banco?.nombre || "Banco desconocido",
+      servicio: compra.servicio?.nombre || "Servicio desconocido",
+    }));
+
+    // Formatear resultados de CompraCombo
+    const comprasComboFormateadas = comprasCombo.map((compraCombo) => ({
+      _id: compraCombo._id,
+      precio: compraCombo.precio,
+      fecha: compraCombo.fecha,
+      cliente: compraCombo.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compraCombo.cuentas.map((cuenta) => ({
+        email: cuenta.email,
+        clave: cuenta.clave,
+      })),
+      banco: compraCombo.banco?.nombre || "Banco desconocido",
+      servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+    }));
+
+    // Fusionar las compras y filtrar por servicio
+    const comprasTotales = [
+      ...comprasFormateadas,
+      ...comprasComboFormateadas,
+    ].filter((compra) => compra.servicio.toLowerCase() === servicioBuscado);
+
+    if (comprasTotales.length === 0) {
       return res.status(404).json({
-        message: "Compra no encontrada.",
+        message: "No se encontraron compras para el servicio especificado.",
         ok: false,
       });
     }
 
     return res.status(200).json({
+      message: "Compras encontradas.",
+      compras: comprasTotales,
+      ok: true,
+    });
+  } catch (error) {
+    console.error("Error en getComprasPorServicioController:", error);
+    return res.status(500).json({
+      message: "Error en el servidor. No se pudieron obtener las compras.",
+      ok: false,
+    });
+  }
+};
+
+const getCompraController = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Buscar en Compra
+    const compra = await Compra.findById(id)
+      .populate({
+        path: "cliente",
+        select: "nombreCompleto -_id",
+      })
+      .populate({
+        path: "servicio",
+        select: "nombre -_id",
+      })
+      .populate({
+        path: "cuenta",
+        select: "email clave -_id",
+      })
+      .populate({
+        path: "banco",
+        select: "nombre -_id",
+      })
+      .lean();
+
+    // Si no se encuentra en Compra, buscar en CompraCombo
+    if (!compra) {
+      const compraCombo = await CompraCombo.findById(id)
+        .populate({
+          path: "cliente",
+          select: "nombreCompleto -_id",
+        })
+        .populate({
+          path: "servicio",
+          select: "nombre -_id",
+        })
+        .populate({
+          path: "cuentas",
+          model: "Cuenta",
+          select: "email clave -_id",
+        })
+        .populate({
+          path: "banco",
+          select: "nombre -_id",
+        })
+        .lean();
+
+      if (!compraCombo) {
+        return res.status(404).json({
+          message: "Compra no encontrada.",
+          ok: false,
+        });
+      }
+
+      // Formatear resultado de CompraCombo
+      const compraComboFormateada = {
+        _id: compraCombo._id,
+        precio: compraCombo.precio,
+        fecha: compraCombo.fecha,
+        cliente: compraCombo.cliente?.nombreCompleto || "Cliente desconocido",
+        cuentas: compraCombo.cuentas.map((cuenta) => ({
+          email: cuenta.email,
+          clave: cuenta.clave,
+        })),
+        banco: compraCombo.banco?.nombre || "Banco desconocido",
+        servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+      };
+
+      return res.status(200).json({
+        message: "Compra encontrada.",
+        compra: compraComboFormateada,
+        ok: true,
+      });
+    }
+
+    // Formatear resultado de Compra
+    const compraFormateada = {
+      _id: compra._id,
+      precio: compra.precio,
+      fecha: compra.fecha,
+      cliente: compra.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compra.cuenta
+        ? [{ email: compra.cuenta.email, clave: compra.cuenta.clave }]
+        : [],
+      banco: compra.banco?.nombre || "Banco desconocido",
+      servicio: compra.servicio?.nombre || "Servicio desconocido",
+    };
+
+    return res.status(200).json({
       message: "Compra encontrada.",
-      compras,
+      compra: compraFormateada,
       ok: true,
     });
   } catch (error) {

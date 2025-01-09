@@ -17,6 +17,7 @@ const {
 
 const {
   eliminarClienteController,
+  deleteAllClientes,
 } = require("../controllers/DELETE/cliente.controller.js");
 
 router.get("/", asureAuth, getClientes);
@@ -30,6 +31,7 @@ router.post("/crear/venta", asureAuth, crearNuevaVentaController);
 router.post("/crear/combo/venta", asureAuth, crearNuevaVentaConComboController);
 
 router.delete("/:id", asureAuth, eliminarClienteController);
+router.delete("/eliminar/all", asureAuth, deleteAllClientes);
 //router.patch("/:id", asureAuth, actualizarClienteController);
 
 module.exports = router;

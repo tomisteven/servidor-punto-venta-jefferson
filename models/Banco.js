@@ -9,10 +9,8 @@ const BancoSchema = new Schema({
   },
   comprasRealizadas: [
     {
-      compras: {
-        type: Schema.Types.ObjectId,
-        ref: "Compra",
-      },
+      type: Schema.Types.ObjectId,
+      ref: "Compra",
     },
   ],
   totalGastado: {

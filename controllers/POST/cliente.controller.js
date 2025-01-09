@@ -44,14 +44,10 @@ const crearNuevoClienteController = async (req, res) => {
 };
 
 const crearNuevaVentaController = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { id_cliente, servicios, banco, generarVenta, precioManual } =
       req.body;
 
-    // Validación inicial
     if (
       !id_cliente ||
       !Array.isArray(servicios) ||
@@ -64,10 +60,9 @@ const crearNuevaVentaController = async (req, res) => {
       });
     }
 
-    // Buscar cliente y banco
     const [cliente, bancoSeleccionado] = await Promise.all([
-      Cliente.findById(id_cliente).session(session),
-      Banco.findOne({ nombre: banco }).session(session),
+      Cliente.findById(id_cliente),
+      Banco.findById(banco),
     ]);
 
     if (!cliente) {
@@ -81,13 +76,12 @@ const crearNuevaVentaController = async (req, res) => {
         .json({ message: "Banco no encontrado", ok: false });
     }
 
-    // Buscar cuentas disponibles
     const ordenes = [];
     for (const servicioNombre of servicios) {
       const cuenta = await Cuenta.findOne({
         servicio: servicioNombre,
         cliente: null,
-      }).session(session);
+      });
 
       if (!cuenta) {
         return res.status(404).json({
@@ -99,7 +93,6 @@ const crearNuevaVentaController = async (req, res) => {
       ordenes.push(cuenta);
     }
 
-    // Si no se va a generar la venta, devolvemos la previsualización
     if (!generarVenta) {
       return res.status(200).json({
         message: "Previsualización de venta",
@@ -108,13 +101,13 @@ const crearNuevaVentaController = async (req, res) => {
       });
     }
 
-    // Generación de la venta
     const compras = [];
     const serviciosActualizados = new Map();
+
     for (const cuenta of ordenes) {
       const servicio =
         serviciosActualizados.get(cuenta.servicio) ||
-        (await Servicio.findById(cuenta.servicioID).session(session));
+        (await Servicio.findById(cuenta.servicioID));
 
       if (!servicio) {
         throw new Error(`Servicio no encontrado: ${cuenta.servicio}`);
@@ -122,7 +115,6 @@ const crearNuevaVentaController = async (req, res) => {
 
       serviciosActualizados.set(cuenta.servicio, servicio);
 
-      // Crear la compra
       const nuevaCompra = new Compra({
         cliente: cliente._id,
         cuenta: cuenta._id,
@@ -131,31 +123,24 @@ const crearNuevaVentaController = async (req, res) => {
         servicio: servicio._id,
       });
 
-      // Actualizar las entidades en memoria
       cliente.totalGastado += nuevaCompra.precio;
-      cliente.comprasRealizadas.push(nuevaCompra);
       servicio.clientesQueLoCompraron.push(cliente._id);
       cuenta.cliente = cliente._id;
-      bancoSeleccionado.comprasRealizadas.push(nuevaCompra);
       bancoSeleccionado.totalGastado += nuevaCompra.precio;
-      // Agregar la compra para guardarla después
+      cliente.comprasIndividualesRealizadas.push(nuevaCompra._id);
+      bancoSeleccionado.comprasRealizadas.push(nuevaCompra._id);
       compras.push(nuevaCompra);
     }
 
-    // Guardar los documentos afectados
     await Promise.all([
-      ...compras.map((compra) => compra.save({ session })),
-      cliente.save({ session }),
-      bancoSeleccionado.save({ session }),
+      ...compras.map((compra) => compra.save()),
+      cliente.save(),
+      bancoSeleccionado.save(),
       ...Array.from(serviciosActualizados.values()).map((servicio) =>
-        servicio.save({ session })
+        servicio.save()
       ),
-      ...ordenes.map((cuenta) => cuenta.save({ session })),
+      ...ordenes.map((cuenta) => cuenta.save()),
     ]);
-
-    // Confirmar la transacción
-    await session.commitTransaction();
-    session.endSession();
 
     return res.status(200).json({
       message: "Venta realizada con éxito",
@@ -164,18 +149,12 @@ const crearNuevaVentaController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error en crearNuevaVentaController:", error);
-
-    // Revertir cambios en caso de error
-    await session.abortTransaction();
-    session.endSession();
-
     return res.status(500).json({
       message: `Error en el servidor: ${error.message}`,
       ok: false,
     });
   }
 };
-
 
 //verificar tema de peticiones recurrentes con el session
 const crearNuevaVentaConComboController = async (req, res) => {
@@ -194,49 +173,33 @@ const crearNuevaVentaConComboController = async (req, res) => {
   enProceso.add(id_cliente);
 
   try {
+    // Iniciar la transacción
     session.startTransaction();
+
     // Validación inicial
     if (!id_cliente || !servicio || !banco) {
-      return res.status(400).json({
-        message: "Los campos id_cliente, servicio y banco son obligatorios.",
-        ok: false,
-      });
+      throw new Error(
+        "Los campos id_cliente, servicio y banco son obligatorios."
+      );
     }
 
-    // Buscar cliente y banco
+    // Buscar cliente, banco y servicio principal
     const [cliente, bancoSeleccionado, servicioPrincipal] = await Promise.all([
       Cliente.findById(id_cliente).session(session),
       Banco.findOne({ nombre: banco }).session(session),
       Servicio.findById(servicio).session(session),
     ]);
 
-    if (!cliente) {
-      return res
-        .status(404)
-        .json({ message: "Cliente no encontrado", ok: false });
-    }
-
-    if (!bancoSeleccionado) {
-      return res
-        .status(404)
-        .json({ message: "Banco no encontrado", ok: false });
-    }
-
-    if (!servicioPrincipal) {
-      return res
-        .status(404)
-        .json({ message: "Servicio no encontrado", ok: false });
-    }
+    if (!cliente) throw new Error("Cliente no encontrado");
+    if (!bancoSeleccionado) throw new Error("Banco no encontrado");
+    if (!servicioPrincipal) throw new Error("Servicio no encontrado");
 
     // Obtener servicios del combo
     const serviciosCombo = servicioPrincipal.servicioCombo || [];
-
     if (serviciosCombo.length === 0) {
-      return res.status(400).json({
-        message:
-          "El servicio seleccionado no tiene servicios en combo asociados.",
-        ok: false,
-      });
+      throw new Error(
+        "El servicio seleccionado no tiene servicios en combo asociados."
+      );
     }
 
     // Buscar cuentas disponibles para los servicios del combo
@@ -244,15 +207,14 @@ const crearNuevaVentaConComboController = async (req, res) => {
     for (const servicioID of serviciosCombo) {
       const servicio = await Servicio.findById(servicioID).session(session);
       const cuenta = await Cuenta.findOne({
-        servicioID: servicioID,
+        servicioID,
         cliente: null,
       }).session(session);
 
       if (!cuenta) {
-        return res.status(404).json({
-          message: `No hay cuentas disponibles para el servicio: ${servicio.nombre}`,
-          ok: false,
-        });
+        throw new Error(
+          `No hay cuentas disponibles para el servicio: ${servicio.nombre}`
+        );
       }
 
       cuentas.push(cuenta);
@@ -260,6 +222,10 @@ const crearNuevaVentaConComboController = async (req, res) => {
 
     // Si no se va a generar la venta, devolvemos la previsualización
     if (!generarVenta) {
+      await session.abortTransaction();
+      session.endSession();
+      enProceso.delete(id_cliente);
+
       return res.status(200).json({
         message: "Previsualización de venta",
         ok: true,
@@ -267,7 +233,7 @@ const crearNuevaVentaConComboController = async (req, res) => {
       });
     }
 
-    // Generar una sola compra
+    // Crear la compra
     const nuevaCompra = new CompraCombo({
       cliente: cliente._id,
       banco: bancoSeleccionado._id,
@@ -276,17 +242,17 @@ const crearNuevaVentaConComboController = async (req, res) => {
       cuentas: cuentas.map((cuenta) => cuenta._id),
     });
 
-    // Actualizar las entidades en memoria
+    // Actualizar entidades
     cliente.totalGastado += nuevaCompra.precio;
-    cliente.comprasRealizadas.push(nuevaCompra);
-    bancoSeleccionado.comprasRealizadas.push(nuevaCompra);
+    cliente.comprasCombosRealizadas.push(nuevaCompra._id);
+    bancoSeleccionado.comprasRealizadas.push(nuevaCompra._id);
     bancoSeleccionado.totalGastado += nuevaCompra.precio;
 
     for (const cuenta of cuentas) {
       cuenta.cliente = cliente._id;
     }
 
-    // Guardar los documentos afectados
+    // Guardar todos los cambios
     await Promise.all([
       nuevaCompra.save({ session }),
       cliente.save({ session }),
@@ -294,9 +260,8 @@ const crearNuevaVentaConComboController = async (req, res) => {
       ...cuentas.map((cuenta) => cuenta.save({ session })),
     ]);
 
-    // Confirmar la transacción
+    // Confirmar transacción
     await session.commitTransaction();
-    session.endSession();
 
     return res.status(200).json({
       message: "Venta realizada con éxito",
@@ -306,14 +271,17 @@ const crearNuevaVentaConComboController = async (req, res) => {
   } catch (error) {
     console.error("Error en crearNuevaVentaConComboController:", error);
 
-    // Revertir cambios en caso de error
+    // Revertir transacción en caso de error
     await session.abortTransaction();
-    session.endSession();
 
     return res.status(500).json({
       message: `Error en el servidor: ${error.message}`,
       ok: false,
     });
+  } finally {
+    // Finalizar sesión y eliminar cliente del conjunto
+    session.endSession();
+    enProceso.delete(id_cliente);
   }
 };
 
