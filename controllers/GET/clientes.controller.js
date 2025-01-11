@@ -106,14 +106,16 @@ const getVentasClienteController = async (req, res) => {
     );
 
     // Formatear compras combo
-    const comprasCombos = cliente.comprasCombosRealizadas.map((compraCombo) => ({
-      _id: compraCombo._id,
-      servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
-      cuentas: compraCombo.cuentas.map((cuenta) => ({
-        email: cuenta.email,
-        clave: cuenta.clave,
-      })),
-    }));
+    const comprasCombos = cliente.comprasCombosRealizadas.map(
+      (compraCombo) => ({
+        _id: compraCombo._id,
+        servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+        cuentas: compraCombo.cuentas.map((cuenta) => ({
+          email: cuenta.email,
+          clave: cuenta.clave,
+        })),
+      })
+    );
 
     return res.status(200).json({
       message: "Compras del cliente obtenidas exitosamente.",
@@ -121,6 +123,7 @@ const getVentasClienteController = async (req, res) => {
         nombreCompleto: cliente.nombreCompleto,
         totalGastado: cliente.totalGastado,
         telefono: cliente.telefono,
+        id: cliente._id,
       },
       compras: {
         individuales: comprasIndividuales,
@@ -131,11 +134,11 @@ const getVentasClienteController = async (req, res) => {
   } catch (error) {
     console.error("Error en getComprasClienteController:", error);
     return res.status(500).json({
-      message: "Error en el servidor. No se pudieron obtener las compras del cliente.",
+      message:
+        "Error en el servidor. No se pudieron obtener las compras del cliente.",
       ok: false,
     });
   }
 };
-
 
 module.exports = { getClientes, getVentasClienteController };

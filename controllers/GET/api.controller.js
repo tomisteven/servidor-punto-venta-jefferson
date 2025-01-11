@@ -48,13 +48,7 @@ const getServiciosConId = async (req, res) => {
     servicios = servicios.map((servicio) => {
       return {
         id: servicio._id,
-        nombre:
-          servicio.nombre +
-          " - " +
-          servicio.nCuentas +
-          " Cuentas " +
-          "- $" +
-          servicio.precio,
+        nombre: servicio.nombre,
       };
     });
 
