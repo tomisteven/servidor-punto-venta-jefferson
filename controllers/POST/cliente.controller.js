@@ -15,7 +15,7 @@ const crearNuevoClienteController = async (req, res) => {
   const { nombreCompleto, email, telefono } = req.body;
 
   try {
-    if (!nombreCompleto || !email || !telefono) {
+    if (!nombreCompleto) {
       return res.status(400).json({
         message: "Todos los campos (nombre, email, teléfono) son obligatorios.",
         ok: false,
@@ -30,7 +30,13 @@ const crearNuevoClienteController = async (req, res) => {
 
     return res.status(201).json({
       message: "Cliente creado con éxito.",
-      cliente: nuevoCliente,
+      clienteCompleto: nuevoCliente,
+      cliente: {
+        id: nuevoCliente._id,
+        nombre: nuevoCliente.nombreCompleto,
+        totalGastado: nuevoCliente.totalGastado,
+      },
+      idCliente: nuevoCliente._id,
       ok: true,
     });
   } catch (error) {

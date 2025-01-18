@@ -3,8 +3,7 @@ const Cliente = require("../../../models/Cliente");
 const crearNuevoCliente = async (clienteData) => {
   try {
     const clienteExiste = await Cliente.find().or([
-      { email: clienteData.email },
-      { telefono: clienteData.telefono },
+      { nombreCompleto: clienteData.nombreCompleto },
     ]);
 
     if (clienteExiste.length > 0) {
