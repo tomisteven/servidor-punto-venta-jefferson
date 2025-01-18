@@ -5,7 +5,7 @@ const {
 } = require("../../services/POST/Cuenta/crearNuevaCuentaService");
 
 const crearCuentaController = async (req, res) => {
-  const { email, clave, servicioID } = req.body;
+  const { email, clave, servicioID, cantidad } = req.body;
 
   try {
     // Validar campos obligatorios
@@ -26,17 +26,17 @@ const crearCuentaController = async (req, res) => {
     }
     const servicio = servicioExiste.nombre || "Servicio no especificado";
     // Crear la cuenta utilizando el servicio
-    const nuevaCuenta = await crearNuevaCuentaService(
-      email,
-      clave,
-      servicio,
-      servicioID
-    );
+    if (cantidad) {
+      for (let i = 0; i < cantidad; i++) {
+        await crearNuevaCuentaService(email, clave, servicio, servicioID);
+      }
+    } else {
+      await crearNuevaCuentaService(email, clave, servicio, servicioID);
+    }
 
-    return res.status(201).json({
-      message: "Cuenta creada con éxito.",
-      cuenta: nuevaCuenta,
+    res.status(200).json({
       ok: true,
+      message: "Cuentas creadas con exito",
     });
   } catch (error) {
     console.error("Error en crearCuentaController:", error);

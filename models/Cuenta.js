@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const CuentaSchema = new Schema({
   email: String,
   clave: String,
-  nCuenta: Number,
+  cantidad : Number,
   cliente: {
     type: Schema.Types.ObjectId,
     ref: "Cliente",

@@ -4,6 +4,8 @@ const Servicio = require("../../models/Servicio");
 const Cliente = require("../../models/Cliente");
 const Banco = require("../../models/Banco");
 const { get } = require("mongoose/lib/schematype");
+const mongoose = require("mongoose");
+
 
 const getModelosCompletos = async (req, res) => {
   try {
@@ -157,10 +159,47 @@ const getInventarioCompletoConServicio = async (req, res) => {
   }
 };
 
+const checkStatusApi = async (req,res) => {
+  try {
+    // Estado de la conexión
+    const connectionState = mongoose.connection.readyState;
+
+    // Mapear los estados de Mongoose
+    const stateMapping = {
+      0: "Desconectado",
+      1: "Conectado",
+      2: "Conectando",
+      3: "Desconectando",
+    };
+    console.log("Estado de la conexión:", connectionState);
+
+    // Verificar estado
+    if (connectionState === 1) {
+      return res.status(200).json({
+        success: true,
+        message: "La base de datos está funcionando correctamente.",
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: `Error al verificar la base de datos: ${stateMapping[connectionState]}`,
+      });
+    }
+  } catch (error) {
+    console.error("Error en checkStatusApi:", error);
+    res.status(500).json({
+      success: false,
+      message:
+        "Error al verificar la base de datos. Por favor, intente nuevamente más tarde.",
+    });
+  }
+};
+
 module.exports = {
   getModelosCompletos,
   getServiciosConId,
   clientesConId,
   getBancosConId,
   getInventarioCompletoConServicio,
+  checkStatusApi,
 };
