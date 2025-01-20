@@ -165,7 +165,6 @@ const crearNuevaVentaController = async (req, res) => {
 //verificar tema de peticiones recurrentes con el session
 const crearNuevaVentaConComboController = async (req, res) => {
   const { id_cliente, servicio, banco, generarVenta, precioManual } = req.body;
-  const session = await mongoose.startSession();
 
   const enProceso = new Set();
 
@@ -179,9 +178,6 @@ const crearNuevaVentaConComboController = async (req, res) => {
   enProceso.add(id_cliente);
 
   try {
-    // Iniciar la transacción
-    session.startTransaction();
-
     // Validación inicial
     if (!id_cliente || !servicio || !banco) {
       throw new Error(
@@ -191,9 +187,9 @@ const crearNuevaVentaConComboController = async (req, res) => {
 
     // Buscar cliente, banco y servicio principal
     const [cliente, bancoSeleccionado, servicioPrincipal] = await Promise.all([
-      Cliente.findById(id_cliente).session(session),
-      Banco.findOne({ nombre: banco }).session(session),
-      Servicio.findById(servicio).session(session),
+      Cliente.findById(id_cliente),
+      Banco.findOne({ nombre: banco }),
+      Servicio.findById(servicio),
     ]);
 
     if (!cliente) throw new Error("Cliente no encontrado");
@@ -211,11 +207,11 @@ const crearNuevaVentaConComboController = async (req, res) => {
     // Buscar cuentas disponibles para los servicios del combo
     const cuentas = [];
     for (const servicioID of serviciosCombo) {
-      const servicio = await Servicio.findById(servicioID).session(session);
+      const servicio = await Servicio.findById(servicioID);
       const cuenta = await Cuenta.findOne({
         servicioID,
         cliente: null,
-      }).session(session);
+      });
 
       if (!cuenta) {
         throw new Error(
@@ -228,10 +224,7 @@ const crearNuevaVentaConComboController = async (req, res) => {
 
     // Si no se va a generar la venta, devolvemos la previsualización
     if (!generarVenta) {
-      await session.abortTransaction();
-      session.endSession();
       enProceso.delete(id_cliente);
-
       return res.status(200).json({
         message: "Previsualización de venta",
         ok: true,
@@ -260,14 +253,11 @@ const crearNuevaVentaConComboController = async (req, res) => {
 
     // Guardar todos los cambios
     await Promise.all([
-      nuevaCompra.save({ session }),
-      cliente.save({ session }),
-      bancoSeleccionado.save({ session }),
-      ...cuentas.map((cuenta) => cuenta.save({ session })),
+      nuevaCompra.save(),
+      cliente.save(),
+      bancoSeleccionado.save(),
+      ...cuentas.map((cuenta) => cuenta.save()),
     ]);
-
-    // Confirmar transacción
-    await session.commitTransaction();
 
     return res.status(200).json({
       message: "Venta realizada con éxito",
@@ -276,20 +266,16 @@ const crearNuevaVentaConComboController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error en crearNuevaVentaConComboController:", error);
-
-    // Revertir transacción en caso de error
-    await session.abortTransaction();
-
     return res.status(500).json({
       message: `Error en el servidor: ${error.message}`,
       ok: false,
     });
   } finally {
-    // Finalizar sesión y eliminar cliente del conjunto
-    session.endSession();
+    // Eliminar cliente del conjunto
     enProceso.delete(id_cliente);
   }
 };
+
 
 const crearClientesMasivos = async (req, res) => {
   const { arrayNombres } = req.body;

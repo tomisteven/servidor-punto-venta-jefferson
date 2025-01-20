@@ -25,18 +25,33 @@ const crearCuentaController = async (req, res) => {
       });
     }
     const servicio = servicioExiste.nombre || "Servicio no especificado";
+
     // Crear la cuenta utilizando el servicio
+    let cuentas = [];
     if (cantidad) {
       for (let i = 0; i < cantidad; i++) {
-        await crearNuevaCuentaService(email, clave, servicio, servicioID);
+        let cuenta = await crearNuevaCuentaService(
+          email,
+          clave,
+          servicio,
+          servicioID
+        );
+        cuentas.push(cuenta);
       }
     } else {
-      await crearNuevaCuentaService(email, clave, servicio, servicioID);
+      let cuenta = await crearNuevaCuentaService(
+        email,
+        clave,
+        servicio,
+        servicioID
+      );
+      cuentas.push(cuenta);
     }
 
     res.status(200).json({
       ok: true,
       message: "Cuentas creadas con exito",
+      cuentas,
     });
   } catch (error) {
     console.error("Error en crearCuentaController:", error);
