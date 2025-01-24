@@ -24,6 +24,11 @@ const ClienteSchema = new Schema({
     type: Number,
     default: 0,
   },
+  comentarios: [
+    {
+      comentario: String,
+    },
+  ],
 });
 
 module.exports = mongoose.model("Cliente", ClienteSchema);

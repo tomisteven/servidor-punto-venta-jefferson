@@ -9,14 +9,19 @@ const {
   getComprasPorServicioController,
   getCompraController,
   getComprasPorFechaController,
-  getCompraComboController
+  getCompraComboController,
 } = require("../controllers/GET/compras.controller.js");
 
 const {
   eliminarCompraController,
 } = require("../controllers/DELETE/compra.controller.js");
+const {
+  agregarComentarioACompra,
+} = require("../controllers/POST/cliente.controller.js");
 
 router.get("/", asureAuth, getComprasController);
+
+router.post("/nuevo/comentario/:id", asureAuth, agregarComentarioACompra);
 router.get("/combo/:id", asureAuth, getCompraComboController);
 
 router.get("/day", asureAuth, getComprasPorDiaController);

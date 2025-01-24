@@ -1,0 +1,5 @@
+-- Agregar ruta para sumar comentarios en
+    - CLIENTE
+    - COMPRA
+
+-- Editar CLIENTE, COMPRA, CUENTA (EMAIL)

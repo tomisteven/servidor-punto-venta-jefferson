@@ -11,6 +11,42 @@ const { createBug } = require("../../utils/bug");
 const Servicio = require("../../models/Servicio");
 const CompraCombo = require("../../models/CompraCombo");
 
+const agregarComentarioACompra = async (req, res) => {
+  const { id } = req.params;
+  const { comentario } = req.body;
+
+  try {
+    const compra = await Compra.findById(id);
+    if (!comentario) {
+      return res.status(400).json({
+        message: "El campo comentario es obligatorio.",
+        ok: false,
+      });
+    }
+    if (!compra) {
+      return res.status(404).json({
+        message: "Compra no encontrada.",
+        ok: false,
+      });
+    }
+
+    compra.comentarios.push({ comentario });
+    await compra.save();
+
+    return res.status(200).json({
+      message: "Comentario agregado con éxito.",
+      ok: true,
+      compra,
+    });
+  } catch (error) {
+    console.error("Error en agregarComentarioACompra:", error);
+    return res.status(500).json({
+      message: `Error en el servidor: ${error.message}`,
+      ok: false,
+    });
+  }
+};
+
 const crearNuevoClienteController = async (req, res) => {
   const { nombreCompleto, email, telefono } = req.body;
 
@@ -51,8 +87,14 @@ const crearNuevoClienteController = async (req, res) => {
 
 const crearNuevaVentaController = async (req, res) => {
   try {
-    const { id_cliente, servicios, banco, generarVenta, precioManual } =
-      req.body;
+    const {
+      id_cliente,
+      servicios,
+      banco,
+      generarVenta,
+      precioManual,
+      comentario,
+    } = req.body;
 
     if (
       !id_cliente ||
@@ -127,8 +169,10 @@ const crearNuevaVentaController = async (req, res) => {
         banco: bancoSeleccionado._id,
         precio: precioManual ? precioManual : servicio.precio,
         servicio: servicio._id,
+        comentarios: [{ comentario }],
       });
 
+      cliente.comentarios.push({ comentario });
       cliente.totalGastado += nuevaCompra.precio;
       servicio.clientesQueLoCompraron.push(cliente._id);
       cuenta.cliente = cliente._id;
@@ -164,7 +208,14 @@ const crearNuevaVentaController = async (req, res) => {
 
 //verificar tema de peticiones recurrentes con el session
 const crearNuevaVentaConComboController = async (req, res) => {
-  const { id_cliente, servicio, banco, generarVenta, precioManual } = req.body;
+  const {
+    id_cliente,
+    servicio,
+    banco,
+    generarVenta,
+    precioManual,
+    comentario,
+  } = req.body;
 
   const enProceso = new Set();
 
@@ -239,6 +290,7 @@ const crearNuevaVentaConComboController = async (req, res) => {
       precio: precioManual || servicioPrincipal.precio,
       servicio: servicioPrincipal._id,
       cuentas: cuentas.map((cuenta) => cuenta._id),
+      comentarios: [{ comentario }],
     });
 
     // Actualizar entidades
@@ -276,7 +328,6 @@ const crearNuevaVentaConComboController = async (req, res) => {
   }
 };
 
-
 const crearClientesMasivos = async (req, res) => {
   const { arrayNombres } = req.body;
 
@@ -312,9 +363,47 @@ const crearClientesMasivos = async (req, res) => {
   }
 };
 
+const agregarComentarioCliente = async (req, res) => {
+  const { id } = req.params;
+  const { comentario } = req.body;
+
+  try {
+    const cliente = await Cliente.findById(id);
+    if (!comentario) {
+      return res.status(400).json({
+        message: "El campo comentario es obligatorio.",
+        ok: false,
+      });
+    }
+    if (!cliente) {
+      return res.status(404).json({
+        message: "Cliente no encontrado.",
+        ok: false,
+      });
+    }
+
+    cliente.comentarios.push({ comentario });
+    await cliente.save();
+
+    return res.status(200).json({
+      message: "Comentario agregado con éxito.",
+      ok: true,
+      cliente,
+    });
+  } catch (error) {
+    console.error("Error en agregarComentarioCliente:", error);
+    return res.status(500).json({
+      message: `Error en el servidor: ${error.message}`,
+      ok: false,
+    });
+  }
+};
+
 module.exports = {
   crearNuevoClienteController,
   crearNuevaVentaController,
   crearClientesMasivos,
   crearNuevaVentaConComboController,
+  agregarComentarioCliente,
+  agregarComentarioACompra,
 };

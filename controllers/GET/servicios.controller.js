@@ -1,7 +1,7 @@
 const Servicios = require("../../models/Servicio");
 
 const getServicios = async (req, res) => {
-  const servicios = await Servicios.find().select("nombre _id").lean()
+  const servicios = await Servicios.find().select("nombre precio _id").lean()
 
   if (!servicios) {
     return res.status(404).json({

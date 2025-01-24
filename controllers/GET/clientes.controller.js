@@ -123,6 +123,7 @@ const getVentasClienteController = async (req, res) => {
         nombreCompleto: cliente.nombreCompleto,
         totalGastado: cliente.totalGastado,
         telefono: cliente.telefono,
+        comentarios: cliente.comentarios,
         id: cliente._id,
       },
       compras: {

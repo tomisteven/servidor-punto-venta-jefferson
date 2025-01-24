@@ -59,6 +59,7 @@ const getComprasController = async (req, res) => {
         : [],
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
+      comentarios: compra.comentarios || "Sin comentarios",
     }));
 
     // Formatear resultados de "CompraCombo"
@@ -73,6 +74,7 @@ const getComprasController = async (req, res) => {
       })),
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+      comentarios: compraCombo.comentarios || "Sin comentarios",
     }));
 
     // Fusionar y ordenar los resultados
@@ -233,6 +235,8 @@ const getComprasPorDiaController = async (req, res) => {
           "compras.servicio": "$compras.servicio.nombre",
           "compras.banco": "$compras.banco.nombre",
           "compras.cuentas": "$compras.cuentas._id",
+          "compras.comentarios": "$compras.comentarios",
+
           "compras.tipo": 1, // Indica si es compra simple o combo
         },
       },
@@ -315,6 +319,7 @@ const getComprasPorFechaController = async (req, res) => {
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
       tipo: "Compra", // Indicar el tipo de compra
+      comentarios: compra.comentarios || [],
     }));
 
     // Formatear los datos de ComprasCombo
@@ -330,6 +335,7 @@ const getComprasPorFechaController = async (req, res) => {
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
       tipo: "CompraCombo", // Indicar el tipo de compra
+      comentarios: compraCombo.comentarios || [],
     }));
 
     // Fusionar ambas listas
@@ -408,6 +414,7 @@ const getComprasPorServicioController = async (req, res) => {
         : [],
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
+      comentarios: compra.comentarios || [],
     }));
 
     // Formatear resultados de CompraCombo
@@ -422,6 +429,7 @@ const getComprasPorServicioController = async (req, res) => {
       })),
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+      comentarios: compraCombo.comentarios || [],
     }));
 
     // Fusionar las compras y filtrar por servicio
@@ -516,6 +524,7 @@ const getCompraController = async (req, res) => {
         })),
         banco: compraCombo.banco?.nombre || "Banco desconocido",
         servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+        comentarios: compraCombo.comentarios || [],
       };
 
       return res.status(200).json({
@@ -536,6 +545,7 @@ const getCompraController = async (req, res) => {
         : [],
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
+      comentarios: compra.comentarios || [],
     };
 
     return res.status(200).json({

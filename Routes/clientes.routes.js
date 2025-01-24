@@ -13,6 +13,7 @@ const {
   crearNuevaVentaController,
   crearNuevaVentaConComboController,
   crearClientesMasivos,
+  agregarComentarioCliente,
 } = require("../controllers/POST/cliente.controller.js");
 
 const {
@@ -26,6 +27,7 @@ router.get("/ventas/:id", asureAuth, getVentasClienteController);
 //router.get("/ver/compras/:id", asureAuth, verComprasClienteController);
 
 router.post("/nuevo", asureAuth, crearNuevoClienteController);
+router.post("/nuevo/comentario/:id", asureAuth, agregarComentarioCliente);
 router.post("/nuevo/masivo", asureAuth, crearClientesMasivos);
 router.post("/crear/venta", asureAuth, crearNuevaVentaController);
 router.post("/crear/combo/venta", asureAuth, crearNuevaVentaConComboController);
