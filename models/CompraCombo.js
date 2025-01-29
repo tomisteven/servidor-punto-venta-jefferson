@@ -24,6 +24,10 @@ const CompraComboSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  fechaCaducacion: {
+    type: Date,
+    default: Date.now,
+  },
   precio: Number,
   comentarios: [
     {

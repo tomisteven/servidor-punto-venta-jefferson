@@ -162,6 +162,8 @@ const crearNuevaVentaController = async (req, res) => {
       }
 
       serviciosActualizados.set(cuenta.servicio, servicio);
+      const now = new Date();
+      const fechaCaducidad = now.setMonth(now.getMonth() + 1); // Agrega un mes exacto
 
       const nuevaCompra = new Compra({
         cliente: cliente._id,
@@ -170,6 +172,7 @@ const crearNuevaVentaController = async (req, res) => {
         precio: precioManual ? precioManual : servicio.precio,
         servicio: servicio._id,
         comentarios: [{ comentario }],
+        fechaCaducacion: fechaCaducidad,
       });
 
       cliente.comentarios.push({ comentario });
@@ -283,6 +286,9 @@ const crearNuevaVentaConComboController = async (req, res) => {
       });
     }
 
+    const now = new Date();
+    const fechaCaducidad = now.setMonth(now.getMonth() + 1); // Agrega un mes exacto
+
     // Crear la compra
     const nuevaCompra = new CompraCombo({
       cliente: cliente._id,
@@ -291,6 +297,7 @@ const crearNuevaVentaConComboController = async (req, res) => {
       servicio: servicioPrincipal._id,
       cuentas: cuentas.map((cuenta) => cuenta._id),
       comentarios: [{ comentario }],
+      fechaCaducacion: fechaCaducidad,
     });
 
     // Actualizar entidades

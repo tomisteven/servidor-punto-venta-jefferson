@@ -60,6 +60,7 @@ const getComprasController = async (req, res) => {
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
       comentarios: compra.comentarios || "Sin comentarios",
+      fechaCaducacion: compra.fechaCaducacion,
     }));
 
     // Formatear resultados de "CompraCombo"
@@ -75,6 +76,7 @@ const getComprasController = async (req, res) => {
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
       comentarios: compraCombo.comentarios || "Sin comentarios",
+      fechaCaducacion: compraCombo.fechaCaducacion,
     }));
 
     // Fusionar y ordenar los resultados
@@ -236,6 +238,7 @@ const getComprasPorDiaController = async (req, res) => {
           "compras.banco": "$compras.banco.nombre",
           "compras.cuentas": "$compras.cuentas._id",
           "compras.comentarios": "$compras.comentarios",
+          "compras.fechaCaducacion": "$compras.fechaCaducacion",
 
           "compras.tipo": 1, // Indica si es compra simple o combo
         },
@@ -320,6 +323,7 @@ const getComprasPorFechaController = async (req, res) => {
       servicio: compra.servicio?.nombre || "Servicio desconocido",
       tipo: "Compra", // Indicar el tipo de compra
       comentarios: compra.comentarios || [],
+      fechaCaducacion: compra.fechaCaducacion,
     }));
 
     // Formatear los datos de ComprasCombo
@@ -336,6 +340,7 @@ const getComprasPorFechaController = async (req, res) => {
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
       tipo: "CompraCombo", // Indicar el tipo de compra
       comentarios: compraCombo.comentarios || [],
+      fechaCaducacion: compraCombo.fechaCaducacion,
     }));
 
     // Fusionar ambas listas
@@ -415,6 +420,7 @@ const getComprasPorServicioController = async (req, res) => {
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
       comentarios: compra.comentarios || [],
+      fechaCaducacion:compra.fechaCaducacion
     }));
 
     // Formatear resultados de CompraCombo
@@ -430,6 +436,7 @@ const getComprasPorServicioController = async (req, res) => {
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
       comentarios: compraCombo.comentarios || [],
+      fechaCaducacion:compraCombo.fechaCaducacion
     }));
 
     // Fusionar las compras y filtrar por servicio
