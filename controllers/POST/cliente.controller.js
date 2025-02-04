@@ -175,7 +175,7 @@ const crearNuevaVentaController = async (req, res) => {
         banco: bancoSeleccionado._id,
         precio: precioManual ? precioManual : servicio.precio,
         servicio: servicio._id,
-        comentarios: [{ comentario }],
+        comentario: comentario,
         fechaCaducacion: fechaCaducidad,
       });
 

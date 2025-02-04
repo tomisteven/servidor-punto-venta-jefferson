@@ -27,6 +27,7 @@ const getComprasController = async (req, res) => {
       .lean()
       .sort({ _id: -1 })
       .limit(50);
+    console.log(compras);
 
     const comprasCombo = await CompraCombo.find()
       .populate({
@@ -59,7 +60,7 @@ const getComprasController = async (req, res) => {
         : [],
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
-      comentarios: compra.comentarios || "Sin comentarios",
+      comentario: compra.comentario || "Sin comentarios",
       fechaCaducacion: compra.fechaCaducacion,
     }));
 
@@ -75,7 +76,7 @@ const getComprasController = async (req, res) => {
       })),
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
-      comentarios: compraCombo.comentarios || "Sin comentarios",
+      comentarios: compraCombo.comentario || "Sin comentarios",
       fechaCaducacion: compraCombo.fechaCaducacion,
     }));
 
@@ -237,7 +238,7 @@ const getComprasPorDiaController = async (req, res) => {
           "compras.servicio": "$compras.servicio.nombre",
           "compras.banco": "$compras.banco.nombre",
           "compras.cuentas": "$compras.cuentas._id",
-          "compras.comentarios": "$compras.comentarios",
+          "compras.comentario": "$compras.comentario",
           "compras.fechaCaducacion": "$compras.fechaCaducacion",
 
           "compras.tipo": 1, // Indica si es compra simple o combo
@@ -322,7 +323,7 @@ const getComprasPorFechaController = async (req, res) => {
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
       tipo: "Compra", // Indicar el tipo de compra
-      comentarios: compra.comentarios || [],
+      comentario: compra.comentario || "Sin comentarios",
       fechaCaducacion: compra.fechaCaducacion,
     }));
 
@@ -339,7 +340,7 @@ const getComprasPorFechaController = async (req, res) => {
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
       tipo: "CompraCombo", // Indicar el tipo de compra
-      comentarios: compraCombo.comentarios || [],
+      comentario: compraCombo.comentario || "Sin comentarios",
       fechaCaducacion: compraCombo.fechaCaducacion,
     }));
 
@@ -419,8 +420,8 @@ const getComprasPorServicioController = async (req, res) => {
         : [],
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
-      comentarios: compra.comentarios || [],
-      fechaCaducacion:compra.fechaCaducacion
+      comentario: compra.comentario || "Sin comentarios",
+      fechaCaducacion: compra.fechaCaducacion,
     }));
 
     // Formatear resultados de CompraCombo
@@ -435,8 +436,8 @@ const getComprasPorServicioController = async (req, res) => {
       })),
       banco: compraCombo.banco?.nombre || "Banco desconocido",
       servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
-      comentarios: compraCombo.comentarios || [],
-      fechaCaducacion:compraCombo.fechaCaducacion
+      comentario: compraCombo.comentario || "Sin comentarios",
+      fechaCaducacion: compraCombo.fechaCaducacion,
     }));
 
     // Fusionar las compras y filtrar por servicio
@@ -531,7 +532,7 @@ const getCompraController = async (req, res) => {
         })),
         banco: compraCombo.banco?.nombre || "Banco desconocido",
         servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
-        comentarios: compraCombo.comentarios || [],
+        comentario: compraCombo.comentario || "Sin comentarios",
       };
 
       return res.status(200).json({
@@ -552,7 +553,7 @@ const getCompraController = async (req, res) => {
         : [],
       banco: compra.banco?.nombre || "Banco desconocido",
       servicio: compra.servicio?.nombre || "Servicio desconocido",
-      comentarios: compra.comentarios || [],
+      comentario: compra.comentario || "Sin comentarios",
     };
 
     return res.status(200).json({

@@ -27,11 +27,7 @@ const CompraSchema = new Schema({
     default: Date.now,
   },
   precio: Number,
-  comentarios: [
-    {
-      comentario: String,
-    },
-  ],
+  comentario: "",
 });
 
 module.exports = mongoose.model("Compra", CompraSchema);
