@@ -146,6 +146,10 @@ const crearNuevaVentaController = async (req, res) => {
         message: "Previsualización de venta",
         ok: true,
         ordenes,
+        fechaCaducidad: new Date(
+          new Date().setMonth(new Date().getMonth() + 1)
+        ),
+        fechaInicio: new Date(),
       });
     }
 
@@ -283,6 +287,10 @@ const crearNuevaVentaConComboController = async (req, res) => {
         message: "Previsualización de venta",
         ok: true,
         cuentas,
+        fechaCaducidad: new Date(
+          new Date().setMonth(new Date().getMonth() + 1)
+        ),
+        fechaInicio: new Date(),
       });
     }
 
