@@ -14,6 +14,7 @@ const {
   crearNuevaVentaConComboController,
   crearClientesMasivos,
   agregarComentarioCliente,
+  crearNuevaVentaConComboController2,
 } = require("../controllers/POST/cliente.controller.js");
 
 const {
@@ -31,6 +32,7 @@ router.post("/nuevo/comentario/:id", asureAuth, agregarComentarioCliente);
 router.post("/nuevo/masivo", asureAuth, crearClientesMasivos);
 router.post("/crear/venta", asureAuth, crearNuevaVentaController);
 router.post("/crear/combo/venta", asureAuth, crearNuevaVentaConComboController);
+router.post("/crear/combo/venta/dos", asureAuth, crearNuevaVentaConComboController2);
 
 router.delete("/:id", asureAuth, eliminarClienteController);
 router.delete("/eliminar/all", asureAuth, deleteAllClientes);

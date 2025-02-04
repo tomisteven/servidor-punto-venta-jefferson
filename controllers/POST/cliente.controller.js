@@ -406,6 +406,139 @@ const agregarComentarioCliente = async (req, res) => {
   }
 };
 
+const crearNuevaVentaConComboController2 = async (req, res) => {
+  const {
+    id_cliente,
+    servicio,
+    banco,
+    generarVenta,
+    precioManual,
+    comentario,
+  } = req.body;
+
+  const enProceso = new Set();
+
+  if (enProceso.has(id_cliente)) {
+    return res.status(429).json({
+      message: "Otra operación está en curso para este cliente.",
+      ok: false,
+    });
+  }
+
+  enProceso.add(id_cliente);
+
+  try {
+    // Validación inicial
+    if (!id_cliente || !servicio || !banco) {
+      throw new Error(
+        "Los campos id_cliente, servicio y banco son obligatorios."
+      );
+    }
+
+    // Buscar cliente, banco y servicio principal en paralelo
+    const [cliente, bancoSeleccionado, servicioPrincipal] = await Promise.all([
+      Cliente.findById(id_cliente),
+      Banco.findOne({ nombre: banco }),
+      Servicio.findById(servicio),
+    ]);
+
+    if (!cliente) throw new Error("Cliente no encontrado");
+    if (!bancoSeleccionado) throw new Error("Banco no encontrado");
+    if (!servicioPrincipal) throw new Error("Servicio no encontrado");
+
+    // Obtener servicios del combo
+    const serviciosCombo = servicioPrincipal.servicioCombo || [];
+    if (serviciosCombo.length === 0) {
+      throw new Error(
+        "El servicio seleccionado no tiene servicios en combo asociados."
+      );
+    }
+
+    // Buscar una cuenta disponible por cada servicio del combo
+    const cuentas = [];
+    for (const servicioID of serviciosCombo) {
+      const servicio = await Servicio.findById(servicioID);
+      const cuenta = await Cuenta.findOne({
+        servicioID,
+        cliente: null,
+      });
+
+      if (!cuenta) {
+        throw new Error(
+          `No hay cuentas disponibles para el servicio: ${servicio.nombre}`
+        );
+      }
+
+      cuentas.push(cuenta);
+    }
+
+    // Si no se va a generar la venta, devolvemos la previsualización
+    if (!generarVenta) {
+      enProceso.delete(id_cliente);
+      return res.status(200).json({
+        message: "Previsualización de venta",
+        ok: true,
+        cuentas,
+      });
+    }
+
+    const now = new Date();
+    const fechaCaducidad = new Date(now.setMonth(now.getMonth() + 1)); // Agrega un mes exacto
+
+    // Crear la compra
+    const nuevaCompra = new CompraCombo({
+      cliente: cliente._id,
+      banco: bancoSeleccionado._id,
+      precio: precioManual || servicioPrincipal.precio,
+      servicio: servicioPrincipal._id,
+      cuentas: cuentas.map((cuenta) => cuenta._id),
+      comentarios: [{ comentario }],
+      fechaCaducacion: fechaCaducidad,
+    });
+
+    // Actualizar entidades
+    cliente.totalGastado += nuevaCompra.precio;
+    cliente.comprasCombosRealizadas.push(nuevaCompra._id);
+    bancoSeleccionado.comprasRealizadas.push(nuevaCompra._id);
+    bancoSeleccionado.totalGastado += nuevaCompra.precio;
+
+    cuentas.forEach((cuenta) => {
+      cuenta.cliente = cliente._id;
+    });
+
+    // Guardar todos los cambios en una transacción
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      await nuevaCompra.save({ session });
+      await cliente.save({ session });
+      await bancoSeleccionado.save({ session });
+      await Promise.all(cuentas.map((cuenta) => cuenta.save({ session })));
+      await session.commitTransaction();
+      session.endSession();
+
+      return res.status(200).json({
+        message: "Venta realizada con éxito",
+        ok: true,
+        compra: nuevaCompra,
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error en crearNuevaVentaConComboController:", error);
+    return res.status(500).json({
+      message: `Error en el servidor: ${error.message}`,
+      ok: false,
+    });
+  } finally {
+    // Eliminar cliente del conjunto
+    enProceso.delete(id_cliente);
+  }
+};
+
 module.exports = {
   crearNuevoClienteController,
   crearNuevaVentaController,
@@ -413,4 +546,5 @@ module.exports = {
   crearNuevaVentaConComboController,
   agregarComentarioCliente,
   agregarComentarioACompra,
+  crearNuevaVentaConComboController2,
 };
