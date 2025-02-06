@@ -7,6 +7,7 @@ const getServicioID = require("../../services/GET/getServicioID");
 
 const getComprasController = async (req, res) => {
   try {
+    // Obtener compras individuales
     const compras = await Compra.find()
       .populate({
         path: "cliente",
@@ -25,10 +26,10 @@ const getComprasController = async (req, res) => {
         select: "nombre -_id",
       })
       .lean()
-      .sort({ _id: -1 })
+      .sort({ fecha: -1 }) // Ordenar por fecha descendente (más recientes primero)
       .limit(50);
-    console.log(compras);
 
+    // Obtener compras combo
     const comprasCombo = await CompraCombo.find()
       .populate({
         path: "cliente",
@@ -47,9 +48,10 @@ const getComprasController = async (req, res) => {
         path: "banco",
         select: "nombre -_id",
       })
-      .lean();
+      .lean()
+      .sort({ fecha: -1 }); // También ordenar por fecha descendente
 
-    // Formatear resultados de "Compra"
+    // Formatear compras individuales
     const comprasFormateadas = compras.map((compra) => ({
       _id: compra._id,
       precio: compra.precio,
@@ -64,7 +66,7 @@ const getComprasController = async (req, res) => {
       fechaCaducacion: compra.fechaCaducacion,
     }));
 
-    // Formatear resultados de "CompraCombo"
+    // Formatear compras combo
     const comprasComboFormateadas = comprasCombo.map((compraCombo) => ({
       _id: compraCombo._id,
       precio: compraCombo.precio,
@@ -80,11 +82,10 @@ const getComprasController = async (req, res) => {
       fechaCaducacion: compraCombo.fechaCaducacion,
     }));
 
-    // Fusionar y ordenar los resultados
-    const comprasTotales = [
-      ...comprasFormateadas,
-      ...comprasComboFormateadas,
-    ].sort((a, b) => b._id - a._id);
+    // Fusionar ambas listas y ordenar nuevamente por fecha descendente
+    const comprasTotales = [...comprasFormateadas, ...comprasComboFormateadas].sort(
+      (a, b) => new Date(b.fecha) - new Date(a.fecha)
+    );
 
     return res.status(200).json({
       message: "Compras encontradas.",
@@ -99,6 +100,134 @@ const getComprasController = async (req, res) => {
     });
   }
 };
+
+const getComprasPorMes = async (req, res) => {
+  try {
+    // Obtener todas las compras individuales
+    const compras = await Compra.find()
+      .populate({
+        path: "cliente",
+        select: "nombreCompleto -_id",
+      })
+      .populate({
+        path: "servicio",
+        select: "nombre -_id",
+      })
+      .populate({
+        path: "cuenta",
+        select: "email clave -_id",
+      })
+      .populate({
+        path: "banco",
+        select: "nombre -_id",
+      })
+      .lean()
+      .sort({ fecha: -1 }); // Ordenar por fecha descendente
+
+    // Obtener todas las compras combo
+    const comprasCombo = await CompraCombo.find()
+      .populate({
+        path: "cliente",
+        select: "nombreCompleto -_id",
+      })
+      .populate({
+        path: "servicio",
+        select: "nombre -_id",
+      })
+      .populate({
+        path: "cuentas",
+        model: "Cuenta",
+        select: "email clave -_id",
+      })
+      .populate({
+        path: "banco",
+        select: "nombre -_id",
+      })
+      .lean()
+      .sort({ fecha: -1 });
+
+    // Formatear compras individuales
+    const comprasFormateadas = compras.map((compra) => ({
+      _id: compra._id,
+      precio: compra.precio,
+      fecha: compra.fecha,
+      cliente: compra.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compra.cuenta
+        ? [{ email: compra.cuenta.email, clave: compra.cuenta.clave }]
+        : [],
+      banco: compra.banco?.nombre || "Banco desconocido",
+      servicio: compra.servicio?.nombre || "Servicio desconocido",
+      comentario: compra.comentario || "Sin comentarios",
+      fechaCaducacion: compra.fechaCaducacion,
+    }));
+
+    // Formatear compras combo
+    const comprasComboFormateadas = comprasCombo.map((compraCombo) => ({
+      _id: compraCombo._id,
+      precio: compraCombo.precio,
+      fecha: compraCombo.fecha,
+      cliente: compraCombo.cliente?.nombreCompleto || "Cliente desconocido",
+      cuentas: compraCombo.cuentas.map((cuenta) => ({
+        email: cuenta.email,
+        clave: cuenta.clave,
+      })),
+      banco: compraCombo.banco?.nombre || "Banco desconocido",
+      servicio: compraCombo.servicio?.nombre || "Servicio desconocido",
+      comentarios: compraCombo.comentario || "Sin comentarios",
+      fechaCaducacion: compraCombo.fechaCaducacion,
+    }));
+
+    // Fusionar todas las compras y ordenarlas por fecha descendente
+    const comprasTotales = [...comprasFormateadas, ...comprasComboFormateadas].sort(
+      (a, b) => new Date(b.fecha) - new Date(a.fecha)
+    );
+
+    // Agrupar compras por mes
+    const comprasPorMes = {};
+
+    comprasTotales.forEach((compra) => {
+      const fechaCompra = new Date(compra.fecha);
+      const mesClave = `${fechaCompra.getFullYear()}-${String(
+        fechaCompra.getMonth() + 1
+      ).padStart(2, "0")}`; // Ejemplo: "2025-01"
+
+      if (!comprasPorMes[mesClave]) {
+        comprasPorMes[mesClave] = {
+          mes: `Mes: ${fechaCompra.toLocaleString("es-ES", {
+            month: "long",
+            year: "numeric",
+          })}`, // Ejemplo: "enero de 2025"
+          compras: [],
+          totalDelMes: 0,
+          cantidadDeCompras: 0,
+        };
+      }
+
+      comprasPorMes[mesClave].compras.push(compra);
+      comprasPorMes[mesClave].totalDelMes += compra.precio;
+      comprasPorMes[mesClave].cantidadDeCompras += 1;
+    });
+
+    // Convertir el objeto a un array y ordenar de mes más reciente a más antiguo
+    const resultadoFinal = Object.values(comprasPorMes).sort(
+      (a, b) =>
+        new Date(b.compras[0].fecha).getTime() - new Date(a.compras[0].fecha).getTime()
+    );
+
+    return res.status(200).json({
+      message: "Compras agrupadas por mes.",
+      compras: resultadoFinal,
+      ok: true,
+    });
+  } catch (error) {
+    console.error("Error en getComprasPorMes:", error);
+    return res.status(500).json({
+      message: "Error en el servidor. No se pudieron obtener las compras por mes.",
+      ok: false,
+    });
+  }
+};
+
 
 const getCompraComboController = async (req, res) => {
   const { id } = req.params;
@@ -273,6 +402,114 @@ const getComprasPorDiaController = async (req, res) => {
     });
   }
 };
+
+const getComprasPorSemanaController = async (req, res) => {
+  try {
+    const compras = await Compra.aggregate([
+      // Unir las compras de ambas colecciones
+      {
+        $unionWith: {
+          coll: "compracombos",
+          pipeline: [{ $addFields: { tipo: "combo" } }],
+        },
+      },
+      {
+        $addFields: {
+          tipo: { $ifNull: ["$tipo", "simple"] },
+        },
+      },
+      // Calcular la semana ISO y la fecha de inicio de la semana (lunes)
+      {
+        $addFields: {
+          year: { $year: "$fecha" },
+          week: { $isoWeek: "$fecha" },
+          startDate: {
+            $dateFromParts: {
+              isoWeekYear: { $year: "$fecha" },
+              isoWeek: { $isoWeek: "$fecha" },
+              isoDayOfWeek: 1, // Lunes de la semana
+            },
+          },
+        },
+      },
+      // Calcular la fecha de fin de la semana (domingo)
+      {
+        $addFields: {
+          endDate: {
+            $dateAdd: {
+              startDate: "$startDate",
+              unit: "day",
+              amount: 6, // Sumar 6 días al lunes para obtener el domingo
+            },
+          },
+        },
+      },
+      // Agrupar todas las compras por semana
+      {
+        $group: {
+          _id: {
+            startDate: "$startDate",
+            endDate: "$endDate",
+          },
+          compras: { $push: "$$ROOT" },
+          totalDeLaSemana: { $sum: "$precio" },
+          CantidadDeCompras: { $sum: 1 },
+        },
+      },
+      // Proyectar en el formato requerido
+      {
+        $project: {
+          _id: 0,
+          semana: {
+            $concat: [
+              "del ",
+              { $dateToString: { format: "%d/%m/%Y", date: "$_id.startDate" } },
+              " al ",
+              { $dateToString: { format: "%d/%m/%Y", date: "$_id.endDate" } },
+            ],
+          },
+          compras: {
+            $map: {
+              input: "$compras",
+              as: "compra",
+              in: {
+                _id: "$$compra._id",
+                precio: "$$compra.precio",
+                servicio: "$$compra.servicio",
+                fecha: "$$compra.fecha",
+                comentario: "$$compra.comentario",
+                fechaCaducacion: "$$compra.fechaCaducacion",
+                tipo: "$$compra.tipo",
+              },
+            },
+          },
+          totalDeLaSemana: 1,
+          CantidadDeCompras: 1,
+        },
+      },
+      // Ordenar por la fecha de inicio de la semana
+      {
+        $sort: { "_id.startDate": 1 },
+      },
+    ]);
+
+    return res.status(200).json({
+      message: "Compras agrupadas por semana encontradas.",
+      compras,
+      ok: true,
+    });
+  } catch (error) {
+    console.error("Error en getComprasPorSemanaController:", error);
+
+    return res.status(500).json({
+      message:
+        "Error al obtener las compras por semana. Intente nuevamente más tarde.",
+      ok: false,
+    });
+  }
+};
+
+
 
 const getComprasPorFechaController = async (req, res) => {
   try {
@@ -577,4 +814,7 @@ module.exports = {
   getCompraController,
   getComprasPorFechaController,
   getCompraComboController,
+
+  getComprasPorSemanaController,
+  getComprasPorMes,
 };

@@ -10,6 +10,8 @@ const {
   getCompraController,
   getComprasPorFechaController,
   getCompraComboController,
+  getComprasPorSemanaController,
+  getComprasPorMes,
 } = require("../controllers/GET/compras.controller.js");
 
 const {
@@ -25,6 +27,8 @@ router.post("/nuevo/comentario/:id", asureAuth, agregarComentarioACompra);
 router.get("/combo/:id", asureAuth, getCompraComboController);
 
 router.get("/day", asureAuth, getComprasPorDiaController);
+router.get("/semana", asureAuth, getComprasPorSemanaController);
+router.get("/mes", asureAuth, getComprasPorMes);
 router.get("/day/:fecha", asureAuth, getComprasPorFechaController);
 
 router.get("/servicio/:servicio", asureAuth, getComprasPorServicioController);
