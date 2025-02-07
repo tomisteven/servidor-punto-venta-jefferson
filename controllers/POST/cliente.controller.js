@@ -138,6 +138,12 @@ const crearNuevaVentaController = async (req, res) => {
         });
       }
 
+      const servicioPrecio = await Servicio.findOne({
+        _id: cuenta.servicioID,
+      });
+
+      cuenta.precio = servicioPrecio.precio;
+
       ordenes.push(cuenta);
     }
 

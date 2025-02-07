@@ -6,7 +6,6 @@ const Banco = require("../../models/Banco");
 const { get } = require("mongoose/lib/schematype");
 const mongoose = require("mongoose");
 
-
 const getModelosCompletos = async (req, res) => {
   try {
     const [compras, servicios, cuentas, clientes, bancos] = await Promise.all([
@@ -51,6 +50,7 @@ const getServiciosConId = async (req, res) => {
       return {
         id: servicio._id,
         nombre: servicio.nombre,
+        precio: servicio.precio,
       };
     });
 
@@ -159,7 +159,7 @@ const getInventarioCompletoConServicio = async (req, res) => {
   }
 };
 
-const checkStatusApi = async (req,res) => {
+const checkStatusApi = async (req, res) => {
   try {
     // Estado de la conexión
     const connectionState = mongoose.connection.readyState;

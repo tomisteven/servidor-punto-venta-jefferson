@@ -1,6 +1,37 @@
 const Servicios = require("../../models/Servicio");
 const Compras = require("../../models/Compra");
 const CompraCombo = require("../../models/CompraCombo");
+const Cuentas = require("../../models/Cuenta");
+
+const getServiciosWithStock = async (req, res) => {
+  const servicios = await Servicios.find()
+    .select(
+      "nombre precio combo fechaCreacion clientesQueLoCompraron nCuentas _id"
+    )
+    .lean();
+
+
+  const serviciosConStock = servicios.map(async (servicio) => {
+    const cuentas = await Cuentas.find({
+      servicioID: servicio._id,
+      cliente: null,
+    }).lean();
+    let stock = cuentas.length;
+    return {
+      nombre: servicio.nombre,
+      precio: servicio.precio,
+      combo: servicio.combo,
+      stock,
+      comprados: servicio.clientesQueLoCompraron.length,
+    };
+  });
+
+  const serviciosConStock$ = await Promise.all(serviciosConStock);
+  res.status(200).json({
+    serviciosConStock$,
+    ok: true,
+  });
+};
 
 const getComprasPorServicioPorSemana = async (req, res) => {
   try {
@@ -177,4 +208,5 @@ module.exports = {
   getServiciosParticulares,
   getServiciosCombos,
   getComprasPorServicioPorSemana,
+  getServiciosWithStock,
 };
